@@ -136,14 +136,15 @@ function saveTok(d){LS.s('sp_t',d.access_token);LS.s('sp_e',Date.now()+(d.expire
 async function sp(path,opts){
   opts=opts||{}
   var token=await getToken()
-  if(!token){LS.d('sp_t');location.reload();return}
+  if(!token) throw new Error('Нет токена Spotify — войди снова')
   var r=await fetch('https://api.spotify.com/v1'+path,Object.assign({},opts,{headers:Object.assign({Authorization:'Bearer '+token,'Content-Type':'application/json'},opts.headers||{})}))
-  if(r.status===401){LS.d('sp_t');location.reload();return}
+  if(r.status===401) throw new Error('Токен Spotify истёк — выйди и войди снова')
+  if(r.status===403) throw new Error('Нет прав Spotify (403)')
   if(r.status===204||r.status===202) return null
-  var ct=r.headers.get("content-type")||""
-  if(!ct.includes("json")){console.warn('Spotify non-JSON:',r.status,r.url);return null}
+  var ct=r.headers.get('content-type')||''
+  if(!ct.includes('json')) throw new Error('Spotify вернул не JSON: '+r.status)
   var json=await r.json()
-  if(json.error){console.warn('Spotify API error:',JSON.stringify(json.error))}
+  if(json.error) throw new Error('Spotify: '+json.error.message+' ('+json.error.status+')')
   return json
 }
 

@@ -140,6 +140,8 @@ async function sp(path,opts){
   var r=await fetch('https://api.spotify.com/v1'+path,Object.assign({},opts,{headers:Object.assign({Authorization:'Bearer '+token,'Content-Type':'application/json'},opts.headers||{})}))
   if(r.status===401){LS.d('sp_t');location.reload();return}
   if(r.status===204||r.status===202) return null
+  var ct=r.headers.get("content-type")||""
+  if(!ct.includes("json")) return null
   return r.json()
 }
 

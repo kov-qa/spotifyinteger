@@ -141,8 +141,10 @@ async function sp(path,opts){
   if(r.status===401){LS.d('sp_t');location.reload();return}
   if(r.status===204||r.status===202) return null
   var ct=r.headers.get("content-type")||""
-  if(!ct.includes("json")) return null
-  return r.json()
+  if(!ct.includes("json")){console.warn('Spotify non-JSON:',r.status,r.url);return null}
+  var json=await r.json()
+  if(json.error){console.warn('Spotify API error:',JSON.stringify(json.error))}
+  return json
 }
 
 async function askGemini(mood){
@@ -248,13 +250,19 @@ async function findMusic(){
   try{
     var seen=new Set(),tracks=[]
     var allQueries=(p.queries||[]).concat([mood])
+    var errors=[]
     await Promise.all(allQueries.map(async function(q){
-      var d=await sp('/search?'+new URLSearchParams({q:q,type:'track',limit:'10'}))
-      ;((d&&d.tracks&&d.tracks.items)||[]).forEach(function(t){if(!seen.has(t.id)){seen.add(t.id);tracks.push(t)}})
+      try{
+        var url='/search?'+new URLSearchParams({q:q,type:'track',limit:'10'})
+        var d=await sp(url)
+        var items=(d&&d.tracks&&d.tracks.items)||[]
+        items.forEach(function(t){if(!seen.has(t.id)){seen.add(t.id);tracks.push(t)}})
+      }catch(e){errors.push(q+': '+e.message)}
     }))
+    if(errors.length) console.warn('Search errors:',errors)
     $('loading').innerHTML=''
     $('analysis').innerHTML='<div class="analysis-row"><div class="analysis-emoji">'+p.emoji+'</div><div><div class="analysis-label">'+p.label+'</div><div class="analysis-desc">'+p.desc+'</div></div></div>'
-    if(!tracks.length){setErr('err','Ничего не нашлось. Попробуй другое описание.');$('find-btn').disabled=false;return}
+    if(!tracks.length){setErr('err','Ничего не нашлось. Запросы: '+allQueries.join(' | '));$('find-btn').disabled=false;return}
     $('tracks').innerHTML='<div class="tracks-label">'+tracks.length+' треков</div>'
     var list=document.createElement('div');list.className='track-list'
     tracks.forEach(function(t,i){

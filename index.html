@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mood → Music</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a08;--s1:#131310;--s2:#1a1916;--s3:#242118;--br:#2c2a24;--t:#f2ede4;--mu:#6b6560;--di:#3a3830;--ac:#c8945a;--ac2:#d9a870;--gn:#1DB954;--gn2:#1ed760;--mo:'DM Mono',monospace;--fn:'Syne',sans-serif}
+html,body{min-height:100vh;background:var(--bg);color:var(--t);font-family:var(--fn)}
+body{display:flex;justify-content:center}
+#app{width:100%;max-width:500px;padding:0 18px}
+.pg{display:none;flex-direction:column;min-height:100vh}.pg.on{display:flex}
+#pg-setup{align-items:center;justify-content:center;padding:44px 0}
+#pg-setup h1{font-size:32px;font-weight:800;line-height:1.05;text-align:center;margin:28px 0 8px}
+.pill{font-size:10px;letter-spacing:.3em;text-transform:uppercase;font-family:var(--mo);color:var(--mu);background:var(--s1);border:1px solid var(--br);border-radius:20px;padding:5px 14px}
+.sub{font-size:12px;color:var(--mu);font-family:var(--mo);text-align:center;line-height:1.7;max-width:320px;margin-bottom:24px}
+.card{width:100%;background:var(--s1);border:1px solid var(--br);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.step{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid var(--s2)}.step:last-child{border-bottom:none}
+.step-n{width:20px;height:20px;border-radius:50%;background:var(--ac);color:var(--bg);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.step-t{font-size:12px;font-weight:700;margin-bottom:3px}
+.step-d{font-size:11px;color:var(--mu);font-family:var(--mo);line-height:1.65}
+.step-d a{color:var(--ac);text-decoration:none}.step-d a:hover{text-decoration:underline}
+.step-d code{background:var(--s2);padding:1px 5px;border-radius:3px;color:var(--t);font-size:10px}
+.uri-box{width:100%;background:#0d170d;border:1px solid #1c461c;border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.uri-lbl{font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-family:var(--mo);color:#52a052;margin-bottom:8px}
+.uri-row{display:flex;gap:8px;align-items:stretch}
+.uri-val{flex:1;background:var(--bg);border:1px solid var(--br);border-radius:5px;padding:8px 10px;font-size:11px;color:var(--t);font-family:var(--mo);word-break:break-all;line-height:1.4}
+.uri-cp{background:#0d170d;border:1px solid #1c461c;border-radius:5px;padding:0 10px;color:#52a052;font-family:var(--mo);font-size:10px;cursor:pointer;white-space:nowrap;transition:background .15s}
+.uri-cp:hover{background:#1c461c}
+.uri-note{font-size:10px;color:#386038;font-family:var(--mo);margin-top:6px}
+.field-label{display:block;font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-family:var(--mo);color:var(--mu);margin-bottom:7px}
+input{width:100%;background:var(--s1);border:1px solid var(--br);border-radius:8px;padding:12px 14px;color:var(--t);font-family:var(--mo);font-size:13px;outline:none;transition:border-color .2s;margin-bottom:8px}
+input:focus{border-color:var(--ac)}
+.btn-spotify{width:100%;background:var(--gn);border:none;border-radius:9px;padding:13px;color:#000;font-family:var(--fn);font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:background .2s}
+.btn-spotify:hover{background:var(--gn2)}
+.ebox{background:#180b0b;border:1px solid #501a1a;border-radius:7px;padding:11px 13px;font-size:11px;font-family:var(--mo);color:#e07060;line-height:1.6;margin-top:8px}
+#pg-main{padding:18px 0}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.topbar-logo{font-size:10px;letter-spacing:.3em;text-transform:uppercase;font-family:var(--mo);color:var(--di)}
+.topbar-right{display:flex;align-items:center;gap:7px}
+.avatar{width:26px;height:26px;border-radius:50%;background:var(--ac);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--bg);overflow:hidden;flex-shrink:0}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.username{font-size:11px;font-family:var(--mo);color:var(--mu)}
+.btn-sm{background:none;border:1px solid var(--br);border-radius:5px;padding:4px 9px;color:var(--di);font-family:var(--mo);font-size:10px;cursor:pointer;transition:all .15s}
+.btn-sm:hover{border-color:var(--di);color:var(--t)}
+.mood-box{background:var(--s1);border:1px solid var(--br);border-radius:12px;padding:18px;margin-bottom:14px}
+.box-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-family:var(--mo);color:var(--di);margin-bottom:10px}
+#mood-input{width:100%;background:transparent;border:none;outline:none;color:var(--t);font-family:var(--fn);font-size:17px;font-weight:700;resize:none;line-height:1.5;height:66px;padding:0}
+#mood-input::placeholder{color:var(--s3)}
+.mood-footer{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--s2);flex-wrap:wrap;gap:7px}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{background:var(--s2);border:none;border-radius:12px;padding:4px 10px;font-size:10px;color:var(--mu);font-family:var(--mo);cursor:pointer;transition:all .15s}
+.chip:hover{background:var(--s3);color:var(--t)}
+.btn-find{background:var(--ac);border:none;border-radius:7px;padding:9px 16px;color:var(--bg);font-family:var(--fn);font-weight:700;font-size:12px;cursor:pointer;transition:background .15s;white-space:nowrap}
+.btn-find:hover{background:var(--ac2)}.btn-find:disabled{background:var(--br);color:var(--di);cursor:not-allowed}
+@keyframes fu{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.analysis-row{display:flex;align-items:center;gap:12px;background:var(--s1);border:1px solid var(--br);border-radius:10px;padding:14px 16px;margin-bottom:12px;animation:fu .25s ease}
+.analysis-emoji{font-size:30px;flex-shrink:0;line-height:1}
+.analysis-label{font-size:17px;font-weight:800;margin-bottom:2px}
+.analysis-desc{font-size:11px;color:var(--mu);font-family:var(--mo);line-height:1.5}
+.tracks-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-family:var(--mo);color:var(--di);margin-bottom:8px}
+.track-list{display:flex;flex-direction:column;gap:4px;padding-bottom:72px}
+.track-row{display:flex;align-items:center;gap:10px;background:var(--s1);border:1px solid var(--s2);border-radius:8px;padding:9px 11px;cursor:pointer;transition:all .15s;animation:fu .25s ease backwards}
+.track-row:hover{background:var(--s2)}.track-row.playing{border-color:var(--ac);background:var(--s2)}
+.track-art{width:38px;height:38px;border-radius:4px;object-fit:cover;flex-shrink:0;background:var(--s2)}
+.track-info{flex:1;min-width:0}
+.track-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px}
+.track-artist{font-size:10px;color:var(--mu);font-family:var(--mo);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track-play{width:26px;height:26px;border-radius:50%;border:1px solid var(--br);background:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--mu);font-size:9px;transition:all .15s}
+.track-row:hover .track-play,.track-row.playing .track-play{border-color:var(--ac);color:var(--ac)}
+.track-dur{font-size:10px;font-family:var(--mo);color:var(--di);width:30px;text-align:right;flex-shrink:0}
+.loading{display:flex;align-items:center;gap:9px;padding:20px 0}
+.spinner{width:18px;height:18px;border:2px solid var(--br);border-top-color:var(--ac);border-radius:50%;flex-shrink:0;animation:spin .75s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:11px;font-family:var(--mo);color:var(--di)}
+.playback{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;background:rgba(10,10,8,.97);border-top:1px solid var(--br);padding:11px 18px;display:flex;align-items:center;gap:10px}
+.playback-art{width:34px;height:34px;border-radius:4px;object-fit:cover;flex-shrink:0;background:var(--s2)}
+.playback-info{flex:1;min-width:0}
+.playback-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.playback-artist{font-size:10px;color:var(--mu);font-family:var(--mo)}
+.playback-status{font-size:10px;font-family:var(--mo);color:var(--ac);flex-shrink:0}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+var GEMINI_URL='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=AIzaSyA-GjMo7Lqu-WWFedSXdXW_8IbUU2CcTCo'
+var SP_SCOPE='user-read-private user-read-email user-read-playback-state user-modify-playback-state'
+var CHIPS=['дождливый вечер','утренняя пробежка','вечеринка в 2 ночи','фокус и работа']
+var nowId=null
+
+var $=function(id){return document.getElementById(id)}
+var LS={g:function(k){return localStorage.getItem(k)||''},s:function(k,v){localStorage.setItem(k,v)},d:function(k){localStorage.removeItem(k)}}
+var redir=function(){return location.origin+location.pathname}
+var ms=function(v){var m=Math.floor(v/60000),s=Math.floor((v%60000)/1000);return m+':'+(s<10?'0':'')+s}
+var setErr=function(id,msg){$(id).innerHTML=msg?'<div class="ebox">'+msg+'</div>':''}
+var spin=function(txt){return '<div class="loading"><div class="spinner"></div><div class="loading-text">'+txt+'</div></div>'}
+
+function b64u(buf){return btoa(String.fromCharCode.apply(null,new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'')}
+
+async function genPKCE(){
+  var v=b64u(crypto.getRandomValues(new Uint8Array(32)))
+  var c=b64u(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v)))
+  return {v:v,c:c}
+}
+
+async function spLogin(clientId){
+  var kv=await genPKCE()
+  LS.s('pkce',kv.v);LS.s('cid',clientId)
+  var p=new URLSearchParams({client_id:clientId,response_type:'code',redirect_uri:redir(),scope:SP_SCOPE,code_challenge_method:'S256',code_challenge:kv.c,show_dialog:'true'})
+  location.href='https://accounts.spotify.com/authorize?'+p
+}
+
+async function spExchange(code){
+  var r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',code:code,redirect_uri:redir(),client_id:LS.g('cid'),code_verifier:LS.g('pkce')})})
+  var d=await r.json()
+  if(d.error) throw new Error(d.error_description||d.error)
+  saveTok(d);LS.d('pkce')
+}
+
+async function getToken(){
+  var t=LS.g('sp_t'),exp=+LS.g('sp_e')
+  if(t&&Date.now()<exp-60000) return t
+  var ref=LS.g('sp_r'),cid=LS.g('cid')
+  if(ref&&cid){
+    var r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:ref,client_id:cid})})
+    var d=await r.json()
+    if(d.access_token){saveTok(d);return d.access_token}
+  }
+  return null
+}
+
+function saveTok(d){LS.s('sp_t',d.access_token);LS.s('sp_e',Date.now()+(d.expires_in||3600)*1000);if(d.refresh_token)LS.s('sp_r',d.refresh_token)}
+
+async function sp(path,opts){
+  opts=opts||{}
+  var token=await getToken()
+  if(!token){LS.d('sp_t');location.reload();return}
+  var r=await fetch('https://api.spotify.com/v1'+path,Object.assign({},opts,{headers:Object.assign({Authorization:'Bearer '+token,'Content-Type':'application/json'},opts.headers||{})}))
+  if(r.status===401){LS.d('sp_t');location.reload();return}
+  if(r.status===204||r.status===202) return null
+  return r.json()
+}
+
+async function askGemini(mood){
+  var prompt='You are a music expert. Given this mood, return ONLY valid JSON (no markdown):\n{"emoji":"🎵","label":"2-4 words in Russian","desc":"One sentence in Russian","queries":["English search 1","English search 2","English search 3"]}\nQueries = specific Spotify search strings in English.\nMood: "'+mood+'"'
+  var r=await fetch(GEMINI_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.8,maxOutputTokens:300}})})
+  if(!r.ok){var e=await r.json().catch(function(){return{}});throw new Error((e.error&&e.error.message)||'Gemini error '+r.status)}
+  var d=await r.json()
+  var text=d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&d.candidates[0].content.parts[0].text||'{}'
+  return JSON.parse(text.replace(/```json|```/g,'').trim())
+}
+
+function initSetup(errMsg){
+  $('app').innerHTML='<div id="pg-setup" class="pg on">'+
+    '<div class="pill">Mood → Music</div>'+
+    '<h1>Управляй Spotify<br>через настроение</h1>'+
+    '<p class="sub">Опиши что угодно — Gemini подберёт музыку и запустит её в Spotify.</p>'+
+    '<div class="card">'+
+      '<div class="step"><div class="step-n">1</div><div>'+
+        '<div class="step-t">Создай Spotify-приложение</div>'+
+        '<div class="step-d">Открой <a href="https://developer.spotify.com/dashboard/create" target="_blank">developer.spotify.com/dashboard/create</a> — название любое. В <code>Redirect URIs</code> вставь URI из зелёной рамки ниже → Add → Save.</div>'+
+      '</div></div>'+
+      '<div class="step"><div class="step-n">2</div><div>'+
+        '<div class="step-t">Вставь Client ID</div>'+
+        '<div class="step-d">В приложении → <code>Settings</code> → скопируй <code>Client ID</code> → вставь ниже.</div>'+
+      '</div></div>'+
+    '</div>'+
+    '<div class="uri-box">'+
+      '<div class="uri-lbl">Redirect URI — добавь в Spotify Dashboard</div>'+
+      '<div class="uri-row"><div class="uri-val" id="uri-val"></div><button class="uri-cp" id="uri-cp">Копировать</button></div>'+
+      '<div class="uri-note">Должен совпадать символ в символ</div>'+
+    '</div>'+
+    '<label class="field-label">Spotify Client ID</label>'+
+    '<input id="cid" placeholder="86c09232f1846a7886e40fcd20d3b0c…">'+
+    '<div id="serr"></div>'+
+    '<button class="btn-spotify" id="login-btn">'+
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>'+
+      'Войти через Spotify'+
+    '</button>'+
+  '</div>'
+  $('uri-val').textContent=redir()
+  if(LS.g('cid'))$('cid').value=LS.g('cid')
+  if(errMsg)setErr('serr',errMsg)
+  $('uri-cp').onclick=function(){navigator.clipboard.writeText(redir()).then(function(){$('uri-cp').textContent='✓ Скопировано';setTimeout(function(){$('uri-cp').textContent='Копировать'},2000)}).catch(function(){prompt('Скопируй:',redir())})}
+  $('login-btn').onclick=async function(){
+    var cid=$('cid').value.trim()
+    if(!cid||cid.length<20){setErr('serr','Введи Client ID из Spotify Dashboard → Settings');return}
+    setErr('serr','');await spLogin(cid)
+  }
+}
+
+function initMain(){
+  $('app').innerHTML='<div id="pg-main" class="pg on">'+
+    '<div class="topbar">'+
+      '<div class="topbar-logo">Mood → Music</div>'+
+      '<div class="topbar-right">'+
+        '<div class="avatar" id="avatar"><span id="avatar-letter">?</span></div>'+
+        '<div class="username" id="username"></div>'+
+        '<button class="btn-sm" id="logout-btn">Выйти</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="mood-box">'+
+      '<div class="box-label">Настроение / описание</div>'+
+      '<textarea id="mood-input" placeholder="дождь за окном, бодрое утро, ностальгия по 90-м…"></textarea>'+
+      '<div class="mood-footer">'+
+        '<div class="chips" id="chips"></div>'+
+        '<button class="btn-find" id="find-btn">Найти →</button>'+
+      '</div>'+
+    '</div>'+
+    '<div id="err"></div><div id="analysis"></div><div id="loading"></div><div id="tracks"></div>'+
+    '<div class="playback" id="pb" style="display:none">'+
+      '<img class="playback-art" id="pb-art" src="" alt="">'+
+      '<div class="playback-info"><div class="playback-name" id="pb-name"></div><div class="playback-artist" id="pb-artist"></div></div>'+
+      '<div class="playback-status" id="pb-status"></div>'+
+    '</div>'+
+  '</div>'
+
+  CHIPS.forEach(function(c){var b=document.createElement('button');b.className='chip';b.textContent=c;b.onclick=function(){$('mood-input').value=c};$('chips').appendChild(b)})
+
+  sp('/me').then(function(u){
+    if(!u)return
+    var n=u.display_name||u.id||'User'
+    $('username').textContent=n;$('avatar-letter').textContent=n[0].toUpperCase()
+    if(u.images&&u.images[0])$('avatar').innerHTML='<img src="'+u.images[0].url+'" alt="">'
+  })
+  $('find-btn').onclick=findMusic
+  $('logout-btn').onclick=function(){['sp_t','sp_r','sp_e'].forEach(function(k){LS.d(k)});location.reload()}
+}
+
+async function findMusic(){
+  var mood=$('mood-input').value.trim();if(!mood)return
+  $('find-btn').disabled=true
+  $('analysis').innerHTML='';$('tracks').innerHTML='';setErr('err','')
+  $('loading').innerHTML=spin('Gemini анализирует настроение…')
+  var p
+  try{p=await askGemini(mood)}
+  catch(e){$('loading').innerHTML='';$('find-btn').disabled=false;setErr('err','Ошибка Gemini: '+e.message);return}
+  $('loading').innerHTML=spin('Ищем треки в Spotify…')
+  try{
+    var seen=new Set(),tracks=[]
+    await Promise.all((p.queries||[]).map(async function(q){
+      var d=await sp('/search?'+new URLSearchParams({q:q,type:'track',limit:'8',market:'from_token'}))
+      ;((d&&d.tracks&&d.tracks.items)||[]).forEach(function(t){if(!seen.has(t.id)){seen.add(t.id);tracks.push(t)}})
+    }))
+    $('loading').innerHTML=''
+    $('analysis').innerHTML='<div class="analysis-row"><div class="analysis-emoji">'+p.emoji+'</div><div><div class="analysis-label">'+p.label+'</div><div class="analysis-desc">'+p.desc+'</div></div></div>'
+    if(!tracks.length){setErr('err','Ничего не нашлось. Попробуй другое описание.');$('find-btn').disabled=false;return}
+    $('tracks').innerHTML='<div class="tracks-label">'+tracks.length+' треков</div>'
+    var list=document.createElement('div');list.className='track-list'
+    tracks.forEach(function(t,i){
+      var art=(t.album&&t.album.images&&t.album.images[1]&&t.album.images[1].url)||(t.album&&t.album.images&&t.album.images[0]&&t.album.images[0].url)||''
+      var ar=(t.artists||[]).map(function(a){return a.name}).join(', ')
+      var row=document.createElement('div')
+      row.className='track-row'+(t.id===nowId?' playing':'');row.id='tr-'+t.id;row.style.animationDelay=(i*0.03)+'s'
+      row.innerHTML='<img class="track-art" src="'+art+'" alt="" onerror="this.style.display=\'none\'"><div class="track-info"><div class="track-name">'+t.name+'</div><div class="track-artist">'+ar+'</div></div><div class="track-play">▶</div><div class="track-dur">'+ms(t.duration_ms)+'</div>'
+      row.onclick=(function(uri,name,ar,art,id){return function(){
+        document.querySelectorAll('.track-row.playing').forEach(function(r){r.classList.remove('playing')})
+        row.classList.add('playing');nowId=id;playTrack(uri,name,ar,art)
+      }})(t.uri,t.name,ar,art,t.id)
+      list.appendChild(row)
+    })
+    $('tracks').appendChild(list)
+  }catch(e){$('loading').innerHTML='';setErr('err','Ошибка Spotify: '+e.message)}
+  $('find-btn').disabled=false
+}
+
+async function playTrack(uri,name,artist,art){
+  $('pb').style.display='flex';$('pb-name').textContent=name;$('pb-artist').textContent=artist;$('pb-art').src=art;$('pb-status').textContent='Подключаемся…'
+  try{
+    var d=await sp('/me/player/devices')
+    if(!d||!d.devices||!d.devices.length){$('pb-status').textContent='⚠ Открой Spotify';return}
+    var dev=d.devices.filter(function(x){return x.is_active})[0]||d.devices[0]
+    await sp('/me/player/play?device_id='+dev.id,{method:'PUT',body:JSON.stringify({uris:[uri]})})
+    $('pb-status').textContent='▶ '+dev.name
+  }catch(e){$('pb-status').textContent='Открой Spotify'}
+}
+
+async function boot(){
+  var q=new URLSearchParams(location.search),code=q.get('code'),spErr=q.get('error')
+  if(spErr){history.replaceState({},'',location.pathname);initSetup('Ошибка Spotify: '+spErr+'. Убедись что Redirect URI совпадает.');return}
+  if(code){
+    history.replaceState({},'',location.pathname)
+    try{await spExchange(code);initMain()}catch(e){initSetup('Ошибка авторизации: '+e.message)}
+    return
+  }
+  var token=await getToken()
+  if(token){initMain();return}
+  initSetup()
+}
+boot()
+</script>
+</body>
+</html>

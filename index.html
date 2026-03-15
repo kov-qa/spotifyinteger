@@ -256,9 +256,11 @@ async function findMusic(){
       try{
         var url='/search?'+new URLSearchParams({q:q,type:'track',limit:'10'})
         var d=await sp(url)
+        console.log('Search "'+q+'":', JSON.stringify(d).slice(0,300))
         var items=(d&&d.tracks&&d.tracks.items)||[]
+        console.log('Items found:', items.length)
         items.forEach(function(t){if(!seen.has(t.id)){seen.add(t.id);tracks.push(t)}})
-      }catch(e){errors.push(q+': '+e.message)}
+      }catch(e){errors.push(q+': '+e.message);console.error('Search error:',e.message)}
     }))
     if(errors.length) console.warn('Search errors:',errors)
     $('loading').innerHTML=''

@@ -149,7 +149,7 @@ async function askGemini(mood){
   var lines=[
     "You are a music expert. Given this mood, return ONLY valid JSON (no markdown):",
     "{\"emoji\":\"X\",\"label\":\"2-4 words in Russian\",\"desc\":\"One sentence in Russian\",\"queries\":[\"s1\",\"s2\",\"s3\"]}",
-    "queries = specific Spotify search strings in English, e.g.: arctic monkeys indie, lofi hip hop chill, sad piano ambient.",
+    "queries: 3 Spotify search strings. Use genre + mood + artist style, e.g.: indie rock melancholic radiohead style, acoustic sad singer songwriter, dark electronic ambient. Real genres only.",
     "Mood: "+mood
   ]
   var r=await fetch(GEMINI_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:lines.join("\n")}]}],generationConfig:{temperature:0.8,maxOutputTokens:300}})})
@@ -247,7 +247,8 @@ async function findMusic(){
   $('loading').innerHTML=spin('Ищем треки в Spotify…')
   try{
     var seen=new Set(),tracks=[]
-    await Promise.all((p.queries||[]).map(async function(q){
+    var allQueries=(p.queries||[]).concat([mood])
+    await Promise.all(allQueries.map(async function(q){
       var d=await sp('/search?'+new URLSearchParams({q:q,type:'track',limit:'10'}))
       ;((d&&d.tracks&&d.tracks.items)||[]).forEach(function(t){if(!seen.has(t.id)){seen.add(t.id);tracks.push(t)}})
     }))

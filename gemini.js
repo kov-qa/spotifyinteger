@@ -5,7 +5,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
 
   const KEY = 'AIzaSyA-GjMo7Lqu-WWFedSXdXW_8IbUU2CcTCo'
-  const URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=' + KEY
+  const URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent?key=' + KEY
 
   const r = await fetch(URL, {
     method: 'POST',

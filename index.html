@@ -146,8 +146,13 @@ async function sp(path,opts){
 }
 
 async function askGemini(mood){
-  var prompt='You are a music expert. Given this mood, return ONLY valid JSON (no markdown):\n{"emoji":"🎵","label":"2-4 words in Russian","desc":"One sentence in Russian","queries":["English search 1","English search 2","English search 3"]}\nQueries = specific Spotify search strings in English.\nMood: "'+mood+'"'
-  var r=await fetch(GEMINI_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.8,maxOutputTokens:300}})})
+  var lines=[
+    "You are a music expert. Given this mood, return ONLY valid JSON (no markdown):",
+    "{\"emoji\":\"X\",\"label\":\"2-4 words in Russian\",\"desc\":\"One sentence in Russian\",\"queries\":[\"s1\",\"s2\",\"s3\"]}",
+    "queries = specific Spotify search strings in English, e.g.: arctic monkeys indie, lofi hip hop chill, sad piano ambient.",
+    "Mood: "+mood
+  ]
+  var r=await fetch(GEMINI_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:lines.join("\n")}]}],generationConfig:{temperature:0.8,maxOutputTokens:300}})})
   if(!r.ok){var e=await r.json().catch(function(){return{}});throw new Error((e.error&&e.error.message)||'Gemini error '+r.status)}
   var d=await r.json()
   var text=d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&d.candidates[0].content.parts[0].text||'{}'
@@ -243,7 +248,7 @@ async function findMusic(){
   try{
     var seen=new Set(),tracks=[]
     await Promise.all((p.queries||[]).map(async function(q){
-      var d=await sp('/search?'+new URLSearchParams({q:q,type:'track',limit:'8',market:'from_token'}))
+      var d=await sp('/search?'+new URLSearchParams({q:q,type:'track',limit:'10'}))
       ;((d&&d.tracks&&d.tracks.items)||[]).forEach(function(t){if(!seen.has(t.id)){seen.add(t.id);tracks.push(t)}})
     }))
     $('loading').innerHTML=''

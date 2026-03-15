@@ -5,13 +5,20 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
 
   const KEY = 'AIzaSyA-GjMo7Lqu-WWFedSXdXW_8IbUU2CcTCo'
-  const URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent?key=' + KEY
+  const MODEL = 'gemini-3.1-flash-lite-preview'
+  const URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${KEY}`
 
-  const r = await fetch(URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(req.body),
-  })
-  const data = await r.json()
-  res.status(r.status).json(data)
+  try {
+    const r = await fetch(URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body),
+    })
+    const data = await r.json()
+    if (!r.ok) console.error('Gemini error:', r.status, JSON.stringify(data))
+    res.status(r.status).json(data)
+  } catch (e) {
+    console.error('Fetch error:', e.message)
+    res.status(500).json({ error: { message: e.message } })
+  }
 }
